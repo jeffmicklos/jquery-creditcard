@@ -2,12 +2,17 @@
  * Provides automatic class adjustments based on incoming
  * data to provided input
  * @param {jQuery} input credit card number input field
+ * @param {Object} settings only 'callback' is supported
+ * @param {Object.<function>} settings.callback
+ * @param {function} settings.callback.fn function to call
+ *     after we get an response about credit card type
+ * @param {(Object=|function=)} settings.callback.context
+ *     a context to call the function under (optional)
  * @constructor
  */
 CreditCardInput = function(input, settings) {
 
 	this.settings = settings || {};
-
 	this.creditCardNames = CreditCard.getCreditCardNames();
 	this.creditCardClassNames = [
 		'visa',
@@ -45,18 +50,13 @@ CreditCardInput.prototype.onKeyUp = function(event) {
 			.removeClass(this.creditCardClassNames.join(' '))
 			.addClass(this.creditCardNamesToClassNames[cardType]);
 
-		if(this.settings.fn) {
-			this.settings.fn(cardType);
-		}
-
+		this.callbackFunction();
 
 	} else {
 
 		element.removeClass(this.creditCardClassNames.join(' '));
 
-		if(this.settings.fn) {
-			this.settings.fn(null);
-		}
+		this.callbackFunction();
 
 	}
 
@@ -80,4 +80,33 @@ CreditCardInput.prototype.getCreditCardNamesToClassNames = function(names, class
 
 	return map;
 	
+};
+
+
+/**
+ * Calls a provided callback if any
+ * If a context is provided, the function will
+ * be fired under that context, which is helpful
+ * when dealing with non-global functions.
+ * @param {?string} arg usually card name
+ */
+CreditCardInput.prototype.callbackFunction = function(arg) {
+
+	if(this.settings.callback) {
+		
+		if(this.settings.callback.context) {
+			
+			this.settings.callback.fn.call(
+				this.settings.callback.context,
+				arg
+			);
+			
+		} else {
+			
+			this.settings.callback.fn(arg);
+			
+		}
+		
+	}
+
 };
